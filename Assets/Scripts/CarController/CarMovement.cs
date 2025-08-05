@@ -19,17 +19,31 @@ namespace CarController
         
         [SerializeField,  Min(0f)]
         private float steeringSpeed = 50f;
+        
+        public delegate void OnAccelerationDelegate(float accelerationFactor);
+        public event OnAccelerationDelegate OnAcceleration;
+        
+        public delegate void OnSteeringDelegate(float steeringFactor);
+        public event OnSteeringDelegate OnSteering;
 
         public float AccelerationFactor
         {
             get => _accelerationFactor;
-            private set => _accelerationFactor = Math.Clamp(value, -0.2f, 1f);
+            private set
+            {
+                _accelerationFactor = Math.Clamp(value, -0.2f, 1f);
+                OnAcceleration?.Invoke(_accelerationFactor);
+            }
         }
 
         public float SteeringFactor
         {
             get => _steeringFactor;
-            private set => _steeringFactor = Math.Clamp(value, -1f, 1f);
+            private set
+            {
+                _steeringFactor = Math.Clamp(value, -1f, 1f);
+                OnSteering?.Invoke(_steeringFactor);
+            }
         }
 
         private void Start()
@@ -65,9 +79,9 @@ namespace CarController
             var minSpeedBeforeTurning = Mathf.Clamp01(_rigidbody.linearVelocity.magnitude / 8);
             
             var localVelocity = transform.InverseTransformDirection(_rigidbody.linearVelocity);
-            var direction = -1f;
-            if (localVelocity.y > 0f) direction = 1f;
-             
+            var direction = 1f;
+            if (localVelocity.y > 0f) direction = -1f;
+
             _rotationAngle += SteeringFactor * steeringSpeed * minSpeedBeforeTurning * direction * Time.fixedDeltaTime;
             _rigidbody.MoveRotation(_rotationAngle);
         }
